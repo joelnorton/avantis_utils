@@ -55,29 +55,48 @@
             .tap-rate {
                 margin-top: 24px;
                 display: flex;
+                flex-direction: column;
+                align-items: stretch;
                 gap: 8px;
             }
 
-            .tap-rate input,
-            .tap-rate select {
-                width: 320px;
-                padding: 10px 12px;
+            .tap-rate label {
+                font-size: 1rem;
+                color: #f0f0f0;
+                margin-bottom: 4px;
+            }
+
+            .tap-rate select,
+            .tap-rate input[type=number] {
+                width: 100%;
+                padding: 12px 16px;
                 border: 1px solid #555;
                 border-radius: 8px;
                 background: #2a2a2a;
                 color: #f0f0f0;
                 font-size: 1rem;
+                box-sizing: border-box;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3A");
+                background-repeat: no-repeat;
+                background-position: right 8px top 50%;
+                padding-right: 32px;
             }
 
             .tap-rate button {
-                padding: 10px 16px;
+                width: 120px;
+                height: 120px;
+                padding: 24px 0;
                 border: none;
                 border-radius: 8px;
                 background: #3a6ea5;
                 color: #fff;
-                font-size: 1rem;
+                font-size: 1.2rem;
                 font-weight: 600;
                 cursor: pointer;
+                flex-shrink: 0;
+                box-sizing: border-box;
+                margin: 0 auto;
             }
 
             .tap-rate button:hover:not(:disabled) {
