@@ -11,7 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const MicColors string = "Red Blue Purple Yellow Red Pastor1 Pastor2 Orange"
+// DefaultMicColors is used if micColors is not set in .env
+const DefaultMicColors = "Red Blue Purple Yellow Green Pastor1 Pastor2 Orange"
 
 func main() {
 
@@ -29,7 +30,11 @@ func main() {
 		Timeout: 1 * time.Second,
 	}
 
-	micsList := strings.Split(MicColors, " ")
+	micColors := environment["micColors"]
+	if micColors == "" {
+		micColors = DefaultMicColors
+	}
+	micsList := strings.Split(micColors, " ")
 
 	mics := Mics{Mic: make([]MicStatus, len(micsList))}
 	for i := range mics.Mic {
