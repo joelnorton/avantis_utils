@@ -58,8 +58,9 @@
                 gap: 8px;
             }
 
-            .tap-rate input {
-                width: 160px;
+            .tap-rate input,
+            .tap-rate select {
+                width: 320px;
                 padding: 10px 12px;
                 border: 1px solid #555;
                 border-radius: 8px;
@@ -79,8 +80,23 @@
                 cursor: pointer;
             }
 
-            .tap-rate button:hover {
+            .tap-rate button:hover:not(:disabled) {
                 filter: brightness(1.15);
+            }
+
+            .tap-rate button:disabled,
+            .tap-rate select:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+            .status {
+                margin: 16px 0 0;
+                font-size: 1rem;
+            }
+
+            .status.error {
+                color: #ff8a80;
             }
         </style>
     </head>
@@ -98,28 +114,49 @@
             </form>
             {{end}}
         </div>
-        <form id="tap-rate-form" class="tap-rate" method="post" action="/setTapRate/">
-            <input
-                id="tap-rate"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Tap rate"
+        <form id="tap-rate-form" class="tap-rate" method="post" action="/setTapRate">
+            <select
+                id="tap-rate-device"
+                name="device"
                 required
-            />
-            <button type="submit">Set tap rate</button>
+                {{if not .Devices}}disabled{{end}}
+            >
+                {{range .Devices}}
+                <option value="{{.Index}}" {{if .Default}}selected{{end}}>
+                    {{.Name}}
+                </option>
+                {{end}}
+            </select>
+            <button
+                type="submit"
+                id="tap-rate-button"
+                {{if not .Devices}}disabled{{end}}
+            >
+                Set tap rate
+            </button>
         </form>
+        {{if .DeviceError}}
+        <p class="status error">{{.DeviceError}}</p>
+        {{end}}
+        {{if .TapError}}
+        <p class="status error">{{.TapError}}</p>
+        {{end}}
+        {{if .TapRate}}
+        <p class="status">
+            Last sent: {{.TapRate.MS}} ms &middot; {{printf "%.1f"
+            .TapRate.BPM}} BPM &middot; {{.TapRate.DeviceName}} ({{.TapRate.Peaks}}
+            peaks)
+        </p>
+        {{end}}
         <script>
             const form = document.getElementById("tap-rate-form");
-            const input = document.getElementById("tap-rate");
-
-            form.addEventListener("submit", (event) => {
-                event.preventDefault();
-                const rate = input.value.trim();
-                if (rate === "") return;
-                form.action = "/setTapRate/" + encodeURIComponent(rate);
-                form.submit();
-            });
+            const button = document.getElementById("tap-rate-button");
+            if (form && button) {
+                form.addEventListener("submit", () => {
+                    button.disabled = true;
+                    button.textContent = "Listening for 5 s\u2026";
+                });
+            }
         </script>
     </body>
 </html>

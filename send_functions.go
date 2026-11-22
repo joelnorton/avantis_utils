@@ -19,16 +19,20 @@ func sendProMacro(client *http.Client, cfg APIConfig, macroName string) {
 	defer resp.Body.Close()
 }
 
-func sendMixingRate(client *http.Client, cfg APIConfig, level int) {
+func sendMixingRate(client *http.Client, cfg APIConfig, location string, value int) error {
 
 	//http://localhost:8080/console/data/set/fx.rack.0.tl/val
-	url := fmt.Sprintf("http://%s:%d/console/data/set/%s/val", cfg.Server, cfg.Port, cfg.Location)
+	url := fmt.Sprintf("http://%s:%d/console/data/set/%s/val", cfg.Server, cfg.Port, location)
 	// {"fade": 0, "value": 800.0}
-	jsonData := []byte(`{"fade": 0, "value": ` + strconv.Itoa(level) + `}`)
+	jsonData := []byte(`{"fade": 0, "value": ` + strconv.Itoa(value) + `}`)
 	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return
+		return fmt.Errorf("posting mixing rate: %w", err)
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("mixing server returned %s", resp.Status)
+	}
+	return nil
 }
