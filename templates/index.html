@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Mics</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 24px;
+                font-family: system-ui, sans-serif;
+                background: #1c1c1c;
+                color: #f0f0f0;
+            }
+
+            h1 {
+                margin: 0 0 24px;
+                font-size: 1.5rem;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(4, 120px);
+                gap: 16px;
+            }
+
+            .grid form {
+                margin: 0;
+            }
+
+            .mic {
+                width: 120px;
+                height: 120px;
+                border: none;
+                border-radius: 8px;
+                color: #fff;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: filter 120ms ease;
+            }
+
+            .mic:hover {
+                filter: brightness(1.15);
+            }
+
+            .active {
+                background: #2e9e44;
+            }
+
+            .inactive {
+                background: #c0392b;
+            }
+
+            .tap-rate {
+                margin-top: 24px;
+                display: flex;
+                gap: 8px;
+            }
+
+            .tap-rate input {
+                width: 160px;
+                padding: 10px 12px;
+                border: 1px solid #555;
+                border-radius: 8px;
+                background: #2a2a2a;
+                color: #f0f0f0;
+                font-size: 1rem;
+            }
+
+            .tap-rate button {
+                padding: 10px 16px;
+                border: none;
+                border-radius: 8px;
+                background: #3a6ea5;
+                color: #fff;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .tap-rate button:hover {
+                filter: brightness(1.15);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Mics</h1>
+        <div class="grid">
+            {{range $i, $mic := .Mic}}
+            <form method="post" action="/toggle/{{$i}}">
+                <button
+                    type="submit"
+                    class="mic {{if $mic.Active}}active{{else}}inactive{{end}}"
+                >
+                    {{$mic.Name}}
+                </button>
+            </form>
+            {{end}}
+        </div>
+        <form id="tap-rate-form" class="tap-rate" method="post" action="/setTapRate/">
+            <input
+                id="tap-rate"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Tap rate"
+                required
+            />
+            <button type="submit">Set tap rate</button>
+        </form>
+        <script>
+            const form = document.getElementById("tap-rate-form");
+            const input = document.getElementById("tap-rate");
+
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const rate = input.value.trim();
+                if (rate === "") return;
+                form.action = "/setTapRate/" + encodeURIComponent(rate);
+                form.submit();
+            });
+        </script>
+    </body>
+</html>
