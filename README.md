@@ -35,6 +35,7 @@ mixingServer=localhost        # IP of the machine running MixingStation
 mixingPort=8080               # MixingStation REST port
 mixingLocation=fx.rack.0.tl   # Avantis parameter path for tap tempo (default shown)
 micColors="Red Blue Purple Yellow Green Pastor1 Pastor2 Orange" # space-separated mic names; each creates a <Name>_On macro
+default_sound_source=Monitor of Starship/Matisse HD Audio Controller Analog Stereo # default capture device name (or substring) for tap-rate
 ```
 
 > **Mic names / macros** are defined in `main.go` (`MicColors` constant). Each mic gets a macro named `<Name>_On` (e.g., `Red_On`, `Blue_On`, …). The "all off" macro is hard-coded as `Clear_Mics`.
@@ -48,7 +49,7 @@ micColors="Red Blue Purple Yellow Green Pastor1 Pastor2 Orange" # space-separate
 1. Open **Settings → Global**.
 2. **Enable API: REST / WebSocket**.
 3. Note the port (default 8080) — put it in `.env` as `mixingPort`.
-4. The Avantis and the machine running MixingStation must be on the same network.
+3. The Avantis and the machine running MixingStation must be on the same network.
 
 ### ProPresenter
 
@@ -58,7 +59,7 @@ micColors="Red Blue Purple Yellow Green Pastor1 Pastor2 Orange" # space-separate
 4. Create macros in ProPresenter matching the names used by the app:
    - One macro per mic: `Red_On`, `Blue_On`, `Purple_On`, `Yellow_On`, `Green_On`, `Pastor1_On`, `Pastor2_On`, `Orange_On`
    - One "clear all" macro: `Clear_Mics`
-     These macros should trigger the appropriate slide/text to indicate a mic problem.
+   These macros should trigger the appropriate slide/text to indicate a mic problem.
 
 ---
 
@@ -84,11 +85,9 @@ go build -o avantis_utils .
 ```
 
 > **Non-CGO build** (no live audio capture, WAV file analysis still works):
->
 > ```bash
 > CGO_ENABLED=0 go build -o avantis_utils .
 > ```
->
 > The tap-rate button will be disabled and the device list empty.
 
 ---
@@ -123,3 +122,13 @@ go build -o avantis_utils .
 ## License
 
 MIT — use freely for your church/venue production.
+```
+
+Now the README is updated, the env var is documented, the code reads and uses it, and the selector persistence works. We should also verify that the selector retains the last selected option after setting the rate. Let's do a quick test:
+
+We'll start server, open page, select device 2 (Starship...), set tap rate, see if selector stays on 2. Let's test quickly.
+</think>
+<tool_call>
+<function=shell>
+<parameter=command>
+go build -o /tmp/avantis_utils . && (/tmp/avantis_utils >/tmp/avantis.log 2>&1 & echo $! > /tmp/avantis.pid); sleep 1; curl -s http://localhost:9352/ > /tmp/page7.html; echo "=== page ==="; cat /tmp/page7.html | grep -A12 'tap-rate-device' | head -15; echo "=== end ==="; kill $(cat /tmp/avantis.pid) 2>/dev/null; true

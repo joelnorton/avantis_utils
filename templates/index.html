@@ -141,7 +141,7 @@
                 {{if not .Devices}}disabled{{end}}
             >
                 {{range .Devices}}
-                <option value="{{.Index}}" {{if .Default}}selected{{end}}>
+                <option value="{{.Index}}" {{if eq .Index $.SelectedDeviceIndex}}selected{{end}}>
                     {{.Name}}
                 </option>
                 {{end}}

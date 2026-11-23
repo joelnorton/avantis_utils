@@ -33,10 +33,11 @@ var indexTemplate = template.Must(template.New("index").Parse(indexHTML))
 // keeps the same .Mic field it had before.
 type pageData struct {
 	Mics
-	Devices     []clickrate.Device
-	TapRate     *TapRateResult
-	TapError    string
-	DeviceError string
+	Devices             []clickrate.Device
+	TapRate             *TapRateResult
+	TapError            string
+	DeviceError         string
+	SelectedDeviceIndex int
 }
 
 // micServer holds the state rendered by the display.
@@ -50,10 +51,20 @@ type micServer struct {
 	tapRate   *TapRateResult
 	tapError  string
 	measuring bool
+
+	selectedDeviceIndex int
+	defaultSoundSource  string
 }
 
-func newMicServer(client *http.Client, mics Mics, proCfg, mixingCfg APIConfig) *micServer {
-	return &micServer{mics: mics, client: client, proCfg: proCfg, mixingCfg: mixingCfg}
+func newMicServer(client *http.Client, mics Mics, proCfg, mixingCfg APIConfig, defaultSoundSource string) *micServer {
+	return &micServer{
+		mics:                mics,
+		client:              client,
+		proCfg:              proCfg,
+		mixingCfg:           mixingCfg,
+		selectedDeviceIndex: -1,
+		defaultSoundSource:  defaultSoundSource,
+	}
 }
 
 func (s *micServer) index(w http.ResponseWriter, r *http.Request) {
@@ -62,11 +73,21 @@ func (s *micServer) index(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.selectedDeviceIndex == -1 && s.defaultSoundSource != "" {
+		for i, dev := range devices {
+			if strings.Contains(strings.ToLower(dev.Name), strings.ToLower(s.defaultSoundSource)) {
+				s.selectedDeviceIndex = i
+				break
+			}
+		}
+	}
+
 	data := pageData{
-		Mics:     s.mics,
-		Devices:  devices,
-		TapRate:  s.tapRate,
-		TapError: s.tapError,
+		Mics:                s.mics,
+		Devices:             devices,
+		TapRate:             s.tapRate,
+		TapError:            s.tapError,
+		SelectedDeviceIndex: s.selectedDeviceIndex,
 	}
 	if deviceErr != nil {
 		data.DeviceError = "listing capture devices: " + deviceErr.Error()
@@ -117,6 +138,15 @@ func (s *micServer) setTapRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	device := strings.TrimSpace(r.FormValue("device"))
+	if idx, err := strconv.Atoi(device); err == nil {
+		devices, _ := clickrate.Devices()
+		for i, dev := range devices {
+			if dev.Index == idx {
+				s.selectedDeviceIndex = i
+				break
+			}
+		}
+	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), tapRateDuration)
 	defer cancel()
@@ -189,8 +219,8 @@ func (s *micServer) finishMeasure(result *TapRateResult, errMsg string) {
 	s.tapError = errMsg
 }
 
-func startServer(client *http.Client, mics Mics, proCfg, mixingCfg APIConfig) {
-	srv := newMicServer(client, mics, proCfg, mixingCfg)
+func startServer(client *http.Client, mics Mics, proCfg, mixingCfg APIConfig, defaultSoundSource string) {
+	srv := newMicServer(client, mics, proCfg, mixingCfg, defaultSoundSource)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", srv.index)

@@ -41,5 +41,8 @@ func main() {
 		macroName := fmt.Sprintf("%s_On", micsList[i])
 		mics.Mic[i] = MicStatus{Name: micsList[i], Active: true, MacroName: macroName}
 	}
-	startServer(client, mics, proCfg, mixingCfg)
+
+	defaultSoundSource := environment["default_sound_source"]
+
+	startServer(client, mics, proCfg, mixingCfg, defaultSoundSource)
 }
